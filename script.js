@@ -1,47 +1,49 @@
-window.addEventListener('load', () => {
+window.addEventListener("load", () => {
   initDT(); // Initialize the DatatTable and window.columnNames variables
 
   const repo = getRepoFromUrl();
 
   if (repo) {
-    document.getElementById('q').value = repo;
+    document.getElementById("q").value = repo;
     fetchData();
   }
 });
 
-document.getElementById('form').addEventListener('submit', e => {
+document.getElementById("form").addEventListener("submit", e => {
   e.preventDefault();
   fetchData();
 });
 
 function fetchData() {
-  const repo = document.getElementById('q').value;
+  const repo = document.getElementById("q").value;
   const re = /[-_\w]+\/[-_.\w]+/;
 
   const urlRepo = getRepoFromUrl();
 
   if (!urlRepo || urlRepo !== repo) {
-    window.history.pushState('', '', `#${repo}`);
+    window.history.pushState("", "", `#${repo}`);
   }
 
   if (re.test(repo)) {
     fetchAndShow(repo);
   } else {
     showMsg(
-      'Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;',
-      'danger'
+      "Invalid GitHub repository! Format is &lt;username&gt;/&lt;repo&gt;",
+      "danger"
     );
   }
 }
 
 function updateDT(data) {
   // Remove any alerts, if any:
-  if ($('.alert')) $('.alert').remove();
+  if ($(".alert")) $(".alert").remove();
 
   // Format dataset and redraw DataTable. Use second index for key name
   const forks = [];
   for (let fork of data) {
-    fork.repoLink = `<a href="https://github.com/${fork.full_name}" target="_blank">Link</a>`;
+    fork.repoLink = `<a href="https://github.com/${
+      fork.full_name
+    }" target="_blank">Link</a>`;
     fork.ownerName = fork.owner.login;
     forks.push(fork);
   }
@@ -58,48 +60,48 @@ function initDT() {
   // Create ordered Object with column name and mapped display name
   window.columnNamesMap = [
     // [ 'Repository', 'full_name' ],
-    ['Link', 'repoLink'], // custom key
-    ['Owner', 'ownerName'], // custom key
-    ['Name', 'name'],
-    ['Branch', 'default_branch'],
-    ['Stars', 'stargazers_count'],
-    ['Forks', 'forks'],
-    ['Open Issues', 'open_issues_count'],
-    ['Size', 'size'],
-    ['Last Push', 'pushed_at'],
+    ["Link", "repoLink"], // custom key
+    ["Owner", "ownerName"], // custom key
+    ["Name", "name"],
+    ["Branch", "default_branch"],
+    ["Stars", "stargazers_count"],
+    ["Forks", "forks"],
+    ["Open Issues", "open_issues_count"],
+    ["Size", "size"],
+    ["Last Push", "pushed_at"]
   ];
 
   // Sort by stars:
-  const sortColName = 'Stars';
+  const sortColName = "Stars";
   const sortColumnIdx = window.columnNamesMap
     .map(pair => pair[0])
     .indexOf(sortColName);
 
   // Use first index for readable column name
   // we use moment's fromNow() if we are rendering for `pushed_at`; better solution welcome
-  window.forkTable = $('#forkTable').DataTable({
+  window.forkTable = $("#forkTable").DataTable({
     columns: window.columnNamesMap.map(colNM => {
       return {
         title: colNM[0],
         render:
-          colNM[1] === 'pushed_at'
+          colNM[1] === "pushed_at"
             ? (data, type, _row) => {
-                if (type === 'display') {
+                if (type === "display") {
                   return moment(data).fromNow();
                 }
                 return data;
               }
-            : null,
+            : null
       };
     }),
-    order: [[sortColumnIdx, 'desc']],
+    order: [[sortColumnIdx, "desc"]]
   });
 }
 
 function fetchAndShow(repo) {
-  repo = repo.replace('https://github.com/', '');
-  repo = repo.replace('http://github.com/', '');
-  repo = repo.replace('.git', '');
+  repo = repo.replace("https://github.com/", "");
+  repo = repo.replace("http://github.com/", "");
+  repo = repo.replace(".git", "");
 
   fetch(
     `https://api.github.com/repos/${repo}/forks?sort=stargazers&per_page=100`
@@ -114,24 +116,24 @@ function fetchAndShow(repo) {
     })
     .catch(error => {
       const msg =
-        error.toString().indexOf('Forbidden') >= 0
-          ? 'Error: API Rate Limit Exceeded'
+        error.toString().indexOf("Forbidden") >= 0
+          ? "Error: API Rate Limit Exceeded"
           : error;
-      showMsg(`${msg}. Additional info in console`, 'danger');
+      showMsg(`${msg}. Additional info in console`, "danger");
       console.error(error);
     });
 }
 
 function showMsg(msg, type) {
-  let alert_type = 'alert-info';
+  let alert_type = "alert-info";
 
-  if (type === 'danger') {
-    alert_type = 'alert-danger';
+  if (type === "danger") {
+    alert_type = "alert-danger";
   }
 
-  document.getElementById('footer').innerHTML = '';
+  document.getElementById("footer").innerHTML = "";
 
-  document.getElementById('data-body').innerHTML = `
+  document.getElementById("data-body").innerHTML = `
         <div class="alert ${alert_type} alert-dismissible fade show" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
